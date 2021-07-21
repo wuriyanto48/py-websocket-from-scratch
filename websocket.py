@@ -314,6 +314,9 @@ class ClientObject(Process):
                     MESSAGE LENGTH bit (9 0 1 2 3 4 5)
                     message length can be determined with operation & 
                     with 01111111 = 127 or 0x7f in hexadecimal
+
+                    remove first one higher bit by ANDing (&) with 127
+
                     10000101 = 133
                     01111111 = 127
                     ---------------&
