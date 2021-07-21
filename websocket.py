@@ -13,7 +13,7 @@ logging.basicConfig()
 logger = logging.getLogger("wspy")
 logger.setLevel(logging.INFO)
 
-BUFFER = 1024
+BUFFER = 1024*1024
 CRLF = bytes([13, 10])
 SPACE = bytes([32])
 
@@ -159,19 +159,38 @@ class ClientObject(Process):
                                 logger.info(f'server -> response {response}')
                                 self.client.sendall(response)
                             else:
-                                logger.info('server -> receive outside websocket section')
-                                parsed_request = Request.parse_request(content)
-                                logger.info(f'server -> receive outside websocket section {parsed_request.body}')
+                                if path_url == '/favicon.ico' and method == 'GET':
+                                    continue
 
-                                body = 'hello world'
-                                headers = {
-                                    'Content-Type': 'text/plain; encoding=utf8',
-                                    'Content-Length': len(body),
-                                }
-                                response = build_response(headers, 200, 'OK', body).encode('utf-8')
-                                self.client.sendall(response)
-                                self.close()
-                                break
+                                if path_url == '/' and method == 'GET':
+                                    parsed_request = Request.parse_request(content)
+                                    logger.info(f'server -> receive outside websocket section {parsed_request.body}')
+
+                                    with open('index.html', 'r') as html_body:
+                                        body = html_body.read()
+                                        headers = {
+                                            'Content-Type': 'text/html; encoding=utf8',
+                                            'Content-Length': len(body),
+                                        }
+                                        response = build_response(headers, 200, 'OK', body).encode('utf-8')
+                                        self.client.sendall(response)
+                                        self.close()
+                                        # break
+                                        
+                                else:
+                                    logger.info('server -> receive outside websocket section')
+                                    parsed_request = Request.parse_request(content)
+                                    logger.info(f'server -> receive outside websocket section {parsed_request.body}')
+
+                                    body = 'hello world'
+                                    headers = {
+                                        'Content-Type': 'text/plain; encoding=utf8',
+                                        'Content-Length': len(body),
+                                    }
+                                    response = build_response(headers, 200, 'OK', body).encode('utf-8')
+                                    self.client.sendall(response)
+                                    self.close()
+                                    # break
                 else:
                     logger.info('server -> server begin decode websocket message')
                     logger.info(f'server -> receive {content}')
@@ -228,12 +247,29 @@ class ClientObject(Process):
                     the negotiated extensions defines the meaning of such a nonzero
                     value, the receiving endpoint MUST _Fail the WebSocket
                     Connection_.
+
+                    rsv checking algorithm
+                    10000001 = 129
+                    mask = 00000001
+
+                    check if second bit from first byte = 0
+                    10000001 >> 6 = 00000010 
+                    00000010 & mask = 00000000 or 0 in decimal
+
+                    check if third bit from first byte = 0
+                    10000001 >> 5 = 00000100 
+                    00000100 & mask = 00000000 or 0 in decimal
+
+                    check if fourth bit from first byte = 0
+                    10000001 >> 4 = 00001000
+                    00000100 & mask = 00000000 or 0 in decimal
                     '''
                     rsvs = []
+                    logger.info(f'websocket server -> rsv masking {bin(content[0])}')
                     for i in range(3):
                         j = (6 - i)
-                        print(f'j {j}')
-                        rsv = ((content[0] >> j) & 1) != 0
+                        logger.info(f'websocket server -> rsv masking {j} {bin(content[0] >> j)}')
+                        rsv = ((content[0] >> j) & 1) == 0
                         rsvs.append(rsv)
 
                     '''
@@ -433,19 +469,19 @@ class ClientObject(Process):
 
                     # header_w = header_w + [ord(m) for m in message]
                     logger.info(f'header_w {header_w}')
-                    # self.write(bytes(header_w))
-                    # self.write(message.encode())
+                    self.write(bytes(header_w))
+                    self.write(message.encode())
 
                     # send to all connected client
-                    for c in self.server.clients.values():
-                        logger.info(f'conneced client {c.session_id}')
-                        c.write(bytes(header_w))
-                        c.write(message.encode())
+                    # for c in self.server.clients.values():
+                    #     logger.info(f'conneced client {c.session_id}')
+                    #     c.write(bytes(header_w))
+                    #     c.write(message.encode())
 
                     # self.close()
                     # break
             except Exception as e:
-                logger.error(f'server -> error reading client data: {e}')
+                logger.error(f'server -> error reading client data: {e.with_traceback()}')
                 self.close()
                 break
 
