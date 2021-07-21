@@ -1,0 +1,77 @@
+<!doctype html>
+<h2>WebSocket Test</h2>
+<textarea cols=60 rows=6></textarea>
+<button id="buttonSend">send</button>
+<button id="buttonConnect">connect</button>
+<button id="buttonDisconnect">disconnect</button>
+<div id=output></div>
+<script>
+    // http://www.websocket.org/echo.html
+
+    var buttonSend = document.querySelector("#buttonSend");
+    var buttonConnect = document.querySelector("#buttonConnect");
+    var buttonDisconnect = document.querySelector("#buttonDisconnect");
+
+    var output = document.querySelector("#output");
+    var textarea = document.querySelector("textarea");
+    var wsUri = "ws://127.0.0.1:8666/chat";
+    var websocket;
+    websocket = new WebSocket(wsUri);
+
+    buttonSend.addEventListener("click", onClickButton);
+
+    //     Value	State	Description
+    //      0	CONNECTING	Socket has been created. The connection is not yet open.
+    //      1	OPEN	    The connection is open and ready to communicate.
+    //      2	CLOSING	    The connection is in the process of closing.
+    //      3	CLOSED	    The connection is closed or couldn't be opened.
+    buttonConnect.addEventListener("click", function(e) {
+        console.log('websocket ', websocket);
+        if (websocket.readyState === WebSocket.CLOSED) {
+            console.log('connect');
+            websocket = new WebSocket(wsUri);
+        }
+    });
+
+    buttonDisconnect.addEventListener("click", function(e) {
+        console.log('disconnect');
+        if (websocket.readyState === WebSocket.OPEN) {
+            websocket.close();
+        }
+    });
+
+    websocket.onopen = function (e) {
+        writeToScreen("CONNECTED");
+        doSend("Hello");
+    };
+
+    websocket.onclose = function (e) {
+        writeToScreen("DISCONNECTED");
+    };
+
+    websocket.onmessage = function (e) {
+        writeToScreen("<span>RESPONSE: " + e.data + "</span>");
+    };
+
+    websocket.onerror = function (e) {
+        writeToScreen("<span class=error>ERROR:</span> " + e.data);
+    };
+
+    function doSend(message) {
+        console.log('websocket ', websocket);
+        writeToScreen("SENT: " + message);
+        websocket.send(message);
+    }
+
+    function writeToScreen(message) {
+        output.insertAdjacentHTML("afterbegin", "<p>" + message + "</p>");
+    }
+
+    function onClickButton() {
+        var text = textarea.value;
+
+        text && doSend(text);
+        textarea.value = "";
+        textarea.focus();
+    }
+</script>
