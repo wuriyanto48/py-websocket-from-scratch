@@ -1,4 +1,4 @@
-# Writing Websocket server from scrath with Python
+# Writing Websocket server from scratch with Python
 
 > This repo is only for my research purposes to create a websocket server from scratch
 
