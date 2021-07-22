@@ -175,7 +175,7 @@ class ClientObject(Process):
                                         response = build_response(headers, 200, 'OK', body).encode('utf-8')
                                         self.client.sendall(response)
                                         self.close()
-                                        # break
+                                        break
                                         
                                 else:
                                     logger.info('server -> receive outside websocket section')
@@ -190,7 +190,7 @@ class ClientObject(Process):
                                     response = build_response(headers, 200, 'OK', body).encode('utf-8')
                                     self.client.sendall(response)
                                     self.close()
-                                    # break
+                                    break
                 else:
                     logger.info('server -> server begin decode websocket message')
                     logger.info(f'server -> receive {content}')
@@ -229,7 +229,9 @@ class ClientObject(Process):
 
                     FIN can be determined wih operation & to the first value(first byte) 
                     with 10000000 = 128 or 0x80 in hexadecimal
-                    for example 129 = 10000001
+                    for example 129 = 10000001 
+
+                    remove first one higher bit by ANDing with 128 (0x80)
                     10000001 = 129
                     10000000 = 128
                     ------------- &

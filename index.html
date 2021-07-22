@@ -16,7 +16,7 @@
     var textarea = document.querySelector("textarea");
     var wsUri = "ws://127.0.0.1:8666/chat";
     var websocket;
-    websocket = new WebSocket(wsUri);
+    // websocket = new WebSocket(wsUri);
 
     buttonSend.addEventListener("click", onClickButton);
 
@@ -27,35 +27,47 @@
     //      3	CLOSED	    The connection is closed or couldn't be opened.
     buttonConnect.addEventListener("click", function(e) {
         console.log('websocket ', websocket);
-        if (websocket.readyState === WebSocket.CLOSED) {
+        if (websocket) {
+            if (websocket.readyState === WebSocket.CLOSED) {
+                console.log('connect');
+                websocket = new WebSocket(wsUri);
+                setOption(websocket);
+            }
+        } else {
             console.log('connect');
             websocket = new WebSocket(wsUri);
+            setOption(websocket);
         }
+        
     });
 
     buttonDisconnect.addEventListener("click", function(e) {
         console.log('disconnect');
-        if (websocket.readyState === WebSocket.OPEN) {
-            websocket.close();
+        if (websocket) {
+            if (websocket.readyState === WebSocket.OPEN) {
+                websocket.close();
+            }
         }
     });
 
-    websocket.onopen = function (e) {
-        writeToScreen("CONNECTED");
-        doSend("Hello");
-    };
+    function setOption(ws) {
+        ws.onopen = function (e) {
+            writeToScreen("CONNECTED");
+            doSend("Hello");
+        };
 
-    websocket.onclose = function (e) {
-        writeToScreen("DISCONNECTED");
-    };
+        ws.onclose = function (e) {
+            writeToScreen("DISCONNECTED");
+        };
 
-    websocket.onmessage = function (e) {
-        writeToScreen("<span>RESPONSE: " + e.data + "</span>");
-    };
+        ws.onmessage = function (e) {
+            writeToScreen("<span>RESPONSE: " + e.data + "</span>");
+        };
 
-    websocket.onerror = function (e) {
-        writeToScreen("<span class=error>ERROR:</span> " + e.data);
-    };
+        ws.onerror = function (e) {
+            writeToScreen("<span class=error>ERROR:</span> " + e.data);
+        };
+    }
 
     function doSend(message) {
         console.log('websocket ', websocket);
