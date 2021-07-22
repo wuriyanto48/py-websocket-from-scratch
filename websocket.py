@@ -5,7 +5,7 @@ import hashlib
 import random
 import string
 import signal
-import base64
+from b64 import b64_encode
 import re
 from multiprocessing import Process
 
@@ -56,7 +56,7 @@ def generate_session_id(len: int) -> str:
 def generate_ws_server_key(ws_key: str) -> str:
     key_str = f'{ws_key}{WEBSOCKET_GUID}'
     hashed = hashlib.sha1(key_str.encode('utf-8'))
-    return base64.b64encode(hashed.digest()).decode()
+    return b64_encode(hashed.digest()).decode()
 
 def build_response(headers: dict, http_code: int, http_code_msg: str, body: str = None) -> str:
     proto = f'HTTP/1.1 {http_code} {http_code_msg}\r\n'
