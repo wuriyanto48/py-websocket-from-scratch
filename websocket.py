@@ -14,8 +14,8 @@ logger = logging.getLogger("wspy")
 logger.setLevel(logging.INFO)
 
 BUFFER = 1024*1024
-CRLF = bytes([13, 10])
-SPACE = bytes([32])
+CRLF = bytes([0xD, 0xA])
+SPACE = bytes([0x20])
 
 WEBSOCKET_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
@@ -271,7 +271,7 @@ class ClientObject(Process):
                     for i in range(3):
                         j = (6 - i)
                         logger.info(f'websocket server -> rsv masking {j} {bin(content[0] >> j)}')
-                        rsv = ((content[0] >> j) & 1) == 0
+                        rsv = ((content[0] >> j) & 0x1) == 0
                         rsvs.append(rsv)
 
                     '''
