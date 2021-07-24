@@ -402,14 +402,18 @@ class ClientObject(Process):
                     TODO
                     https://betterexplained.com/articles/understanding-big-and-little-endian-byte-order/
                     '''
-                    if message_len <= 125:
+                    if message_len <= 125: # 0x7D
                         message_len = message_len
 
-                    if message_len == 126:
+                    if message_len == 126: # 0x7E
                         logger.info(f'message length 7+16 {[content[3], content[2], 0]}')
-                        message_len = int.from_bytes([content[3], content[2], 0], 'little')
+
+                        # parse unsigned 16 bit message length with big endian byte order 
+                        message_len = int.from_bytes([0, content[2], content[3]], 'big')
                         lengthFields = 4
-                    if message_len == 127:
+                    if message_len == 127: # 0x7F
+                        # TODO
+                        # parse unsigned 64 bit message length with big endian byte order
                         logger.info(f'message length 7+64')
 
                     if mask:
@@ -474,6 +478,7 @@ class ClientObject(Process):
 
                     '''
                     append message length
+                    by extracting 16 bit uint or 64 bit uint
                     '''
                     for i in range(lengthFields):
                         j = (lengthFields - 1 - i) * 8
