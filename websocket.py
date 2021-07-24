@@ -326,12 +326,6 @@ class ClientObject(Process):
                     '''
                     message_len = content[1] & 0x7f
 
-                    '''
-                    lengthFields
-                    for check where MASK position begin from
-                    '''
-                    lengthFields = 2
-
                     # if not mask:
                     #     logger.error(f'server -> message not masked, closing connection')
                     #     self.close()
@@ -397,15 +391,29 @@ class ClientObject(Process):
                     zero, in which case the payload length is the length of the
                     "Application data".
                     '''
+
+                    '''
+                    lengthFields
+                    for check where MASK position begin from
+                    '''
+                    lengthFields = 2
+                    
+                    '''
+                    TODO
+                    https://betterexplained.com/articles/understanding-big-and-little-endian-byte-order/
+                    '''
                     if message_len <= 125:
                         message_len = message_len
 
                     if message_len == 126:
+                        logger.info(f'message length 7+16 {[content[3], content[2], 0]}')
                         message_len = int.from_bytes([content[3], content[2], 0], 'little')
                         lengthFields = 4
-                    # elif message_len == 127:
+                    if message_len == 127:
+                        logger.info(f'message length 7+64')
 
                     if mask:
+                        
                         decoded = []
                         masks = []
                         for i in range(4):
@@ -439,14 +447,14 @@ class ClientObject(Process):
                     logger.info('---------- Begin write ---------')
 
                     message = decoded_message
-                    lengthFields = 2
+                    lengthFields = 0
                     header_w = []
                     bw = 0
 
                     if fin:
                         bw |=0x80
                     
-                    bw |= opcode
+                    bw |= TEXT_OPCODE
                     header_w.append(bw)
 
                     '''
@@ -456,10 +464,10 @@ class ClientObject(Process):
 
                     if len(message) <= 125:
                         bw |= len(message)
-                    elif len(message) < 65536:
+                    elif len(message) < 65536: # 2^16
                         bw |= 126
-                        lengthFields = 4
-                    else:
+                        lengthFields = 2
+                    else: # 2^64
                         bw |= 127
                         lengthFields = 8
                     header_w.append(bw)
@@ -470,7 +478,7 @@ class ClientObject(Process):
                     for i in range(lengthFields):
                         j = (lengthFields - 1 - i) * 8
                         length_b = (len(message) >> j) & 0xff
-                        # header_w.append(length_b)
+                        header_w.append(length_b)
 
                     # header_w = header_w + [ord(m) for m in message]
                     logger.info(f'header_w {header_w}')
