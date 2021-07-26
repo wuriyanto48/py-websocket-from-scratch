@@ -409,12 +409,15 @@ class ClientObject(Process):
                         logger.info(f'message length 7+16 {[content[3], content[2], 0]}')
 
                         # parse unsigned 16 bit message length with big endian byte order 
-                        message_len = int.from_bytes([0, content[2], content[3]], 'big')
+                        # message_len = int.from_bytes([0, content[2], content[3]], 'big')
+                        message_len = int.from_bytes(content[2:4], 'big')
                         lengthFields = 4
                     if message_len == 127: # 0x7F
                         # TODO
+                        # untested with message full 64 bit length
                         # parse unsigned 64 bit message length with big endian byte order
-                        logger.info(f'message length 7+64')
+                        message_len = int.from_bytes(content[2:10], 'big')
+                        logger.info(f'message length 7+64 ml = {message_len}')
 
                     if mask:
                         
@@ -443,7 +446,7 @@ class ClientObject(Process):
                         for d in range(message_len):
                             decoded_data = content[lengthFields + d] ^ masks[d % 4]
                             decoded.append(decoded_data)
-                            print(f'{content[lengthFields + d]} | {masks[d % 4]} | {content[lengthFields + d] ^ masks[d % 4]}')
+                            # print(f'{content[lengthFields + d]} | {masks[d % 4]} | {content[lengthFields + d] ^ masks[d % 4]}')
 
                         decoded_message = bytes(decoded).decode()
                         logger.info(f'decoded_message {decoded_message}')
