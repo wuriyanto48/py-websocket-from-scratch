@@ -231,7 +231,7 @@ class ClientObject(Process):
                     with 10000000 = 128 or 0x80 in hexadecimal
                     for example 129 = 10000001 
 
-                    remove first one higher bit by ANDing with 128 (0x80)
+                    let the first higher significant bit by ANDing with 128 (0x80)
                     10000001 = 129
                     10000000 = 128
                     ------------- &
@@ -264,7 +264,7 @@ class ClientObject(Process):
 
                     check if fourth bit from first byte = 0
                     10000001 >> 4 = 00001000
-                    00000100 & mask = 00000000 or 0 in decimal
+                    00001000 & mask = 00000000 or 0 in decimal
                     '''
                     rsvs = []
                     logger.info(f'websocket server -> rsv masking {bin(content[0])}')
